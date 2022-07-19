@@ -166,6 +166,15 @@ func isClosedConnError(err error) bool {
 
 func (p *Proxy) proxy(w http.ResponseWriter, r *http.Request) {
 	var responseHeader http.Header
+	// [16] RFC 6455 - The WebSocket Protocol. IETF Tools. [2019-05-09]. （原始内容存档于2017-03-06）. 
+	// Servers that are not intended to process input from any web page but only for certain sites SHOULD verify the |Origin| field is an origin they expect. 
+	// If the origin indicated is unacceptable to the server, 
+	// then it SHOULD respond to the WebSocket handshake with a reply containing HTTP 403 Forbidden status code.
+	if origin := r.Header.Get("Origin"); origin == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return w
+	}
+	
 	// If Sec-WebSocket-Protocol starts with "Bearer", respond in kind.
 	// TODO(tmc): consider customizability/extension point here.
 	if strings.HasPrefix(r.Header.Get("Sec-WebSocket-Protocol"), "Bearer") {
